@@ -5,7 +5,7 @@
 | Component | Version(s)                                                                                    | Link                      |
 |-----------|-----------------------------------------------------------------------------------------------|---------------------------|
 | PHP       | ![](https://img.shields.io/badge/7.4-blue.svg) ![](https://img.shields.io/badge/8.0-blue.svg) | [PHP](https://php.net)    |
-| ILIAS     | ![](https://img.shields.io/badge/8.x-orange.svg)                                              | [ILIAS](https://ilias.de) |
+| ILIAS     | ![](https://img.shields.io/badge/7.x-orange.svg)                                              | [ILIAS](https://ilias.de) |
 
 Stable releases of this plugin are published in different branches of this Git repository:
 
