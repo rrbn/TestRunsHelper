@@ -20,4 +20,8 @@ declare(strict_types=1);
 
 class ilTestRunsHelperPlugin extends ilUserInterfaceHookPlugin
 {
+    public function getPluginName(): string
+    {
+        return 'TestRunsHelper';
+    }
 }

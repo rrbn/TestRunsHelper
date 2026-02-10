@@ -20,11 +20,14 @@ declare(strict_types=1);
 
 use ILIAS\UI\Factory;
 use ILIAS\UI\Renderer;
-use ILIAS\HTTP\Wrapper\RequestWrapper;
 use ILIAS\Plugin\TestRunsHelper\Helper;
 use ILIAS\Plugin\TestRunsHelper\SelectForm;
 use ILIAS\UI\Implementation\Component\SignalGeneratorInterface;
 use ILIAS\Plugin\TestRunsHelper\PluginRenderer;
+
+require_once __DIR__ . '/../src/Helper.php';
+require_once __DIR__ . '/../src/SelectForm.php';
+require_once __DIR__ . '/../src/PluginRenderer.php';
 
 /**
  * @ilCtrl_IsCalledBy ilTestRunsHelperGUI: ilUIPluginRouterGUI
@@ -39,9 +42,6 @@ class ilTestRunsHelperGUI
     private Factory $ui_factory;
     private Renderer $ui_renderer;
     private ilPlugin $plugin;
-    private RequestWrapper $query;
-    private RequestWrapper $post;
-    private ILIAS\Refinery\Factory $refinery;
     private ilErrorHandling $error;
     private SignalGeneratorInterface $signal_generator;
 
@@ -61,23 +61,25 @@ class ilTestRunsHelperGUI
         $this->lng = $DIC->language();
         $this->ui_factory = $DIC->ui()->factory();
         $this->ui_renderer = $DIC->ui()->renderer();
-        $this->query = $DIC->http()->wrapper()->query();
-        $this->post = $DIC->http()->wrapper()->post();
-        $this->refinery = $DIC->refinery();
         $this->error = $DIC['ilErr'];
         $this->signal_generator = $DIC["ui.signal_generator"];
-        $this->plugin = $DIC["component.factory"]->getPlugin('teruhe');
+
+        // ILIAS 7: Plugin-Zugriff ueber ilPluginAdmin statt component.factory
+        $this->plugin = ilPluginAdmin::getPluginObjectById('teruhe');
+
+        // ILIAS 7: AbstractComponentRenderer hat 6 Konstruktor-Parameter
+        // (mit ImagePathResolver, aber ohne DataFactory)
         $this->plugin_renderer = new PluginRenderer(
             $DIC->ui()->factory(),
             $DIC["ui.template_factory"],
             $DIC->language(),
             $DIC["ui.javascript_binding"],
             $DIC->refinery(),
-            $DIC["ui.pathresolver"],
-            $DIC["ui.data_factory"]
+            $DIC["ui.pathresolver"]
         );
 
-        $this->ref_id = $this->query->retrieve('ref_id', $this->refinery->kindlyTo()->int());
+        // ILIAS 7: kein HTTP wrapper(), daher $_GET verwenden
+        $this->ref_id = (int) ($_GET['ref_id'] ?? 0);
         $this->ctrl->saveParameter($this, 'ref_id');
 
         $this->test = new ilObjTest($this->ref_id);
@@ -136,17 +138,20 @@ class ilTestRunsHelperGUI
 
     private function continuePasses()
     {
+        // ILIAS 7: kein HTTP wrapper(), daher $_POST verwenden
+        $posted_ids = isset($_POST['active_id']) && is_array($_POST['active_id'])
+            ? array_map('intval', $_POST['active_id'])
+            : [];
+
         $active_ids = array_intersect(
-            $this->post->retrieve('active_id', $this->refinery->byTrying([
-                $this->refinery->to()->listOf($this->refinery->kindlyTo()->int()),
-                $this->refinery->always([])
-            ])),
+            $posted_ids,
             array_keys($this->helper->getFinishedParticipants())
         );
 
         if (empty($active_ids)) {
+            // ILIAS 7: String-Konstanten statt MESSAGE_TYPE_* Klassenkonstanten
             $this->tpl->setOnScreenMessage(
-                ilGlobalTemplateInterface::MESSAGE_TYPE_FAILURE,
+                'failure',
                 $this->plugin->txt('please_select_participant'),
                 true
             );
@@ -155,20 +160,20 @@ class ilTestRunsHelperGUI
 
             if ($affected == 0) {
                 $this->tpl->setOnScreenMessage(
-                    ilGlobalTemplateInterface::MESSAGE_TYPE_FAILURE,
+                    'failure',
                     sprintf($this->plugin->txt('passes_reopened'), 0),
                     true
                 );
             } elseif ($affected == 1) {
                 $this->tpl->setOnScreenMessage(
-                    ilGlobalTemplateInterface::MESSAGE_TYPE_SUCCESS,
+                    'success',
                     $this->plugin->txt('pass_reopened') . ' '
                     . $this->plugin->txt('time_extension_note'),
                     true
                 );
             } else {
                 $this->tpl->setOnScreenMessage(
-                    ilGlobalTemplateInterface::MESSAGE_TYPE_SUCCESS,
+                    'success',
                     sprintf($this->plugin->txt('passes_reopened'), $affected) . ' '
                     . $this->plugin->txt('time_extension_note'),
                     true
@@ -176,7 +181,7 @@ class ilTestRunsHelperGUI
             }
         }
 
-        $this->ctrl->setParameterByClass(ilTestParticipantsGUI::class, 'ref_id', $this->ref_id);
-        $this->ctrl->redirectByClass([ilRepositoryGUI::class, ilObjTestGUI::class, ilTestDashboardGUI::class, ilTestParticipantsGUI::class]);
+        // ILIAS 7: direkter URL-Redirect zurueck zum Test
+        ilUtil::redirect('ilias.php?baseClass=ilRepositoryGUI&ref_id=' . $this->ref_id . '&cmdClass=ilobjtestgui&cmd=infoScreen');
     }
 }

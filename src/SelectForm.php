@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 namespace ILIAS\Plugin\TestRunsHelper;
 
+use ILIAS\UI\Component\Component;
 use ILIAS\UI\Component\JavaScriptBindable;
 use ILIAS\UI\Component\Input\Container\Form\FormWithPostURL;
 use ILIAS\UI\Implementation\Component\ComponentHelper;
@@ -29,7 +30,7 @@ use ILIAS\UI\Implementation\Component\SignalGeneratorInterface;
 use ILIAS\UI\Component\Signal;
 
 
-class SelectForm implements JavaScriptBindable
+class SelectForm implements Component, JavaScriptBindable
 {
     use JavaScriptBindableTrait;
     use ComponentHelper;

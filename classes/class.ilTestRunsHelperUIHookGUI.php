@@ -20,17 +20,17 @@ declare(strict_types=1);
 
 class ilTestRunsHelperUIHookGUI extends ilUIHookPluginGUI
 {
-    protected ilTestRunsHelperGUI $gui;
-
     public function modifyGUI(
-        string $a_comp,
-        string $a_part,
-        array $a_par = []
-    ): void {
+        $a_comp,
+        $a_part,
+        $a_par = []
+    ) {
         if ($a_part === 'tabs') {
             // must be done here because ctrl and tabs are not initialized for all calls
             global $DIC;
-            if (strtolower($DIC->ctrl()->getCmdClass()) === strtolower(ilTestParticipantsTableGUI::class)) {
+            // ILIAS 7: ilTestParticipantsGUI statt ilTestParticipantsTableGUI
+            if (strtolower($DIC->ctrl()->getCmdClass()) === strtolower(ilTestParticipantsGUI::class)) {
+                require_once __DIR__ . '/class.ilTestRunsHelperGUI.php';
                 $gui = new ilTestRunsHelperGUI();
                 $gui->modifyToolbar();
             }

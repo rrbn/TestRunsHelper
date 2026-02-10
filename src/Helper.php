@@ -49,7 +49,7 @@ class Helper
     }
 
     /**
-     * Check if participants with unfinished passes exist
+     * Check if participants with finished passes exist
      */
     public function hasFinishedPasses(): bool
     {
